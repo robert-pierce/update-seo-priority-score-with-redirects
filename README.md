@@ -1,37 +1,10 @@
 # sps_redirect_update
 
-FIXME: description
-
-## Installation
-
-Download from http://example.com/FIXME.
+We want to update the seo-priority-score doc in the google drive to set urls that have a redirect
 
 ## Usage
 
-FIXME: explanation
+Run `update-<site>-doc fns in seo-priority-score-redirect-update.clj in your repl. You will need the current sps docs downloaded with URIs updated in the def from that file.
 
-    $ java -jar sps_redirect_update-0.1.0-standalone.jar [args]
 
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2018 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
 # update-seo-priority-score-with-redirects
