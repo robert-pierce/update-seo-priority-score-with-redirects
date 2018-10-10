@@ -1,7 +1,8 @@
 (ns seo-priority-score-redirect-update
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.data.csv :as csv]))
+            [clojure.data.csv :as csv]
+            [clojure.data :refer [diff]]))
 
 (def update-stats (volatile! {:count 0
                               :urls []})  )
@@ -74,7 +75,7 @@
       (csv/write-csv w
                      (cons header data)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;; Create new ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn update-ag-doc
   []
@@ -103,3 +104,38 @@
     (println "")
     (println "a sample of the urls is ")
     (take 50 (:urls @update-stats))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Verify all urls exist in new as in old;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn sps-map-by-urlid
+  [sps-map]
+  (reduce (fn [acc {:keys [URLid] :as entry}]
+            (assoc acc URLid entry))
+          {}
+          sps-map))
+
+(defn verify-doc
+  [path-to-old path-to-new]
+  (let [old-raw (with-open [r (io/reader path-to-old)] 
+                  (doall
+                   (csv/read-csv r)))
+        old-csv->map (sps-data->map old-raw)
+        old-map-by-url (sps-map-by-urlid old-csv->map)
+        old-urls (keys old-map-by-url)
+        
+        new-raw (with-open [r (io/reader path-to-new)] 
+                  (doall
+                   (csv/read-csv r)))
+        new-csv->map (sps-data->map new-raw)
+        new-map-by-url (sps-map-by-urlid new-csv->map)
+        new-urls (keys new-map-by-url)
+        diff (clojure.data/diff (set new-urls) (set old-urls))]
+    (if (and (nil? (first diff)) (nil? (second diff)))
+      (println "urls math, no difference")
+      (do 
+        (println "urls do NOT match")
+        (println (str "number of urls in new that are not in old " (count (first diff))))
+        (spit "in-new-not-in-old.txt" (first diff))
+        (println (str "number of urls in old that are not in new " (count (second diff))))
+        (spit "in-old-not-in-new.txt" (second diff))
+        (println (str "number of urls in both " (count (nth diff 2))))
+        (spit "in-both.txt" (nth diff 2))))))
